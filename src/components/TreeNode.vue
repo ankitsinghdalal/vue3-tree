@@ -3,6 +3,8 @@ import { ref, defineProps, defineEmits, onMounted, onUnmounted } from 'vue';
 import ContextMenu from './ContextMenu.vue';
 import TreeNode from './TreeNode.vue';
 import { library } from "@fortawesome/fontawesome-svg-core";
+import type { TreeNode as TreeNodeType } from '@/interfaces';
+import { useTreeStore } from '@/stores/tree';
 import {
   faHospital,
   faMedkit,
@@ -20,25 +22,22 @@ library.add(faGripVertical);
 library.add(faUserCircle);
 library.add(faEllipsisV);
 
-// Define the type for a single tree node
-interface TreeNodeType {
-  id: number;
-  name: string;
-  children: TreeNodeType[];
-}
-
 // Props
 defineProps<{
+  nodeIndex: string,
   node: TreeNodeType;
-  type: String
+  type: string
 }>();
 
 // Emit events
 const emit = defineEmits<{
-  (event: 'add-child', parentId: number, child: TreeNodeType): void;
-  (event: 'edit-node', nodeId: number, newName: string): void;
-  (event: 'delete-node', nodeId: number): void;
+  (event: "add-child"): void;
+  (event: "edit-node"): void;
+  (event: "delete-node"): void;
 }>();
+
+const treeStore = useTreeStore();
+const { setActiveNode, deleteNode } = treeStore;
 
 // State
 const showMenu = ref(false);
@@ -81,18 +80,6 @@ const handleClickOutside = (event: MouseEvent) => {
     closeMenu();
   }
 };
-
-const onAddChild = (child: TreeNodeType) => {
-  emit('add-child', node.id, child);
-};
-
-const onEditNode = (newName: string) => {
-  emit('edit-node', node.id, newName);
-};
-
-const onDeleteNode = () => {
-  emit('delete-node', node.id);
-};
 </script>
 <template>
   <div class="relative tree-node space-y-5 left-2">
@@ -109,17 +96,41 @@ const onDeleteNode = () => {
       <span v-if="type === 'child'"><font-awesome-icon icon="grip-vertical" class="text-gray-400 ml-2" /></span>
       <span><font-awesome-icon icon="user-circle" class="text-gray-400 ml-2" /></span>
       <span v-if="type === 'parent'"><font-awesome-icon icon="hospital" class="text-gray-400 ml-2" /></span>
-      <span class="text-gray-700 ml-2">{{ node.name }}</span>
+      <span class="text-gray-700 ml-2">{{ node.name }} </span>
       <button class="text-gray-500 hover:text-gray-700 focus:outline-none ml-2" @click="toggleMenu">
         <font-awesome-icon icon="ellipsis-v" class="text-gray-400" />
       </button>
-      <ContextMenu v-if="showMenu" @add-child="onAddChild" @edit-node="onEditNode" @delete-node="onDeleteNode" />
+      <ContextMenu 
+        v-if="showMenu" 
+        :nodeIndex="`${nodeIndex}`"
+        @add-child="() => {
+          setActiveNode(nodeIndex);
+          closeMenu();
+          emit('add-child');
+        }"
+        @edit-node="() => {
+          setActiveNode(nodeIndex)
+          closeMenu();
+          emit('edit-node');
+        }"
+        @delete-node="() => {
+          setActiveNode(nodeIndex)
+          closeMenu();
+          deleteNode(nodeIndex);
+        }"
+      />
     </div>
-
-    
-
-    <TreeNode v-for="child in node.children" :key="child.id" :node="child" :type="`child`" class="my-5 mx-14"
-      @add-child="onAddChild" @edit-node="onEditNode" @delete-node="onDeleteNode" />
+    <TreeNode 
+      v-for="(child, index) in node.children" 
+      :key="`node-${nodeIndex}-${index}`" 
+      :node="child" 
+      :type="`child`" 
+      class="my-5 mx-14" 
+      :class="`node-${nodeIndex}-${index}`" 
+      :nodeIndex="`${nodeIndex}-${index}`"
+      @add-child="$emit('add-child', $event)"
+      @edit-node="$emit('edit-node', $event)"
+      @delete-node="$emit('delete-node', $event)" />
     
   </div>
 </template>
