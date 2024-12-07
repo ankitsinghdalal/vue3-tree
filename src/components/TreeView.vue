@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { VueDraggableNext as draggable } from 'vue-draggable-next';
 import { useTreeStore } from '@/stores/tree';
 import TreeNode from './TreeNode.vue';
 import GroupModal from './modals/GroupModal.vue';
@@ -36,15 +37,11 @@ const closeEditNodeModal = () => {
     </div>
     <GroupModal :name="`add-child`" :show="isAddChildModalVisible" @close="closeAddChildModal" class="z-10" />
     <GroupModal :name="`edit-node`" :show="isEditNodeModalVisible" @close="closeEditNodeModal" class="z-10" />
-    <TreeNode 
-      v-for="(node, index) in tree"
-      :key="`node-${index}`" 
-      :node="node" 
-      :type="`parent`" 
-      :class="`node-${index}`" 
-      :nodeIndex="`${index}`"
-      @add-child="isAddChildModalVisible = true" 
-      @edit-node="isEditNodeModalVisible = true"
-    />
+    <draggable :list="tree">
+      <TreeNode v-for="(node, index) in tree" :key="`node-${index}`" :node="node" :type="`parent`"
+        :class="`node-${index}`" :nodeIndex="`${index}`" @add-child="isAddChildModalVisible = true"
+        @edit-node="isEditNodeModalVisible = true" />
+    </draggable>
+
   </div>
 </template>

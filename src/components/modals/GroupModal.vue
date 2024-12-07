@@ -1,5 +1,5 @@
 <script  setup lang="ts">
-import { ref, watch, onMounted } from "vue"
+import { ref, watch } from "vue"
 import { useVuelidate } from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
 import { useTreeStore } from '@/stores/tree';
@@ -77,7 +77,6 @@ const resetForm = () => {
       <h2 class="text-lg font-bold mb-4">
         <span v-if="props.name === 'add-child'">Add New Group</span>
         <span v-else>Edit Group</span>
-        {{treeStore.activeNode}}
       </h2>
       <div class="max-w mx-auto">
         <!-- Name Field -->

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, onMounted, onUnmounted } from 'vue';
+import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import ContextMenu from './ContextMenu.vue';
 import TreeNode from './TreeNode.vue';
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -93,44 +94,31 @@ const handleClickOutside = (event: MouseEvent) => {
         class="w-5 h-5 flex items-center justify-center rounded border border-gray-400 text-sm focus:outline-none">
         <font-awesome-icon icon="minus" class="text-gray-500" />
       </button>
-      <span v-if="type === 'child'"><font-awesome-icon icon="grip-vertical" class="text-gray-400 ml-2" /></span>
+      <span v-if="type === 'child'"><font-awesome-icon icon="grip-vertical" class="text-gray-400 ml-2 cursor-grab" :drag-class="'cursor-grabing'" /></span>
       <span><font-awesome-icon icon="user-circle" class="text-gray-400 ml-2" /></span>
       <span v-if="type === 'parent'"><font-awesome-icon icon="hospital" class="text-gray-400 ml-2" /></span>
       <span class="text-gray-700 ml-2">{{ node.name }} </span>
       <button class="text-gray-500 hover:text-gray-700 focus:outline-none ml-2" @click="toggleMenu">
         <font-awesome-icon icon="ellipsis-v" class="text-gray-400" />
       </button>
-      <ContextMenu 
-        v-if="showMenu" 
-        :nodeIndex="`${nodeIndex}`"
-        @add-child="() => {
-          setActiveNode(nodeIndex);
-          closeMenu();
-          emit('add-child');
-        }"
-        @edit-node="() => {
+      <ContextMenu v-if="showMenu" :nodeIndex="`${nodeIndex}`" @add-child="() => {
+        setActiveNode(nodeIndex);
+        closeMenu();
+        emit('add-child');
+      }" @edit-node="() => {
           setActiveNode(nodeIndex)
           closeMenu();
           emit('edit-node');
-        }"
-        @delete-node="() => {
+        }" @delete-node="() => {
           setActiveNode(nodeIndex)
           closeMenu();
           deleteNode(nodeIndex);
-        }"
-      />
+        }" />
     </div>
-    <TreeNode 
-      v-for="(child, index) in node.children" 
-      :key="`node-${nodeIndex}-${index}`" 
-      :node="child" 
-      :type="`child`" 
-      class="my-5 mx-14" 
-      :class="`node-${nodeIndex}-${index}`" 
-      :nodeIndex="`${nodeIndex}-${index}`"
-      @add-child="$emit('add-child', $event)"
-      @edit-node="$emit('edit-node', $event)"
-      @delete-node="$emit('delete-node', $event)" />
-    
+    <draggable :list="node.children">
+      <TreeNode v-for="(child, index) in node.children" :key="`node-${nodeIndex}-${index}`" :node="child"
+        :type="`child`" class="my-5 mx-14" :class="`node-${nodeIndex}-${index}`" :nodeIndex="`${nodeIndex}-${index}`"
+        @add-child="$emit('add-child')" @edit-node="$emit('edit-node')" @delete-node="$emit('delete-node')" />
+    </draggable>
   </div>
 </template>
